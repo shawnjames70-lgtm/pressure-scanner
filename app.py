@@ -27,6 +27,16 @@ from collections import deque
 from datetime import datetime, timezone
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Page config MUST be the very first Streamlit command
+# ─────────────────────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="3-Step Pressure Method",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Bell audio — base64-encoded WAV generated at startup
 # ─────────────────────────────────────────────────────────────────────────────
 @st.cache_resource
@@ -73,16 +83,6 @@ def _play_bell(strikes=3):
         f'</audio>',
         unsafe_allow_html=True
     )
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Page config
-# ─────────────────────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="3-Step Pressure Method",
-    page_icon="🚀",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CSS
