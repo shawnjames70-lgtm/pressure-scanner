@@ -24,8 +24,52 @@ import threading
 import time
 import json
 import os
+import base64
 import requests as _req
 from collections import deque
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bell audio — base64-encoded WAV generated at startup
+# ─────────────────────────────────────────────────────────────────────────────
+@st.cache_resource
+def _build_bell_b64():
+    """Generate a 3-strike trading bell WAV and return as base64 data URI."""
+    import numpy as np, wave, io
+    RATE = 44100
+    def bell_tone(freq, duration, amplitude=0.6):
+        t = np.linspace(0, duration, int(RATE * duration), endpoint=False)
+        env = amplitude * np.exp(-3.5 * t)
+        return env * (
+            0.6 * np.sin(2 * np.pi * freq * t) +
+            0.3 * np.sin(2 * np.pi * freq * 2.76 * t) +
+            0.1 * np.sin(2 * np.pi * freq * 5.4 * t)
+        )
+    silence = np.zeros(int(RATE * 0.10))
+    audio   = np.concatenate([
+        bell_tone(880,  1.2, 0.65), silence,
+        bell_tone(1047, 1.0, 0.55), silence,
+        bell_tone(1319, 0.9, 0.50),
+    ])
+    audio = np.clip(audio, -1.0, 1.0)
+    pcm   = (audio * 32767).astype(np.int16)
+    buf   = io.BytesIO()
+    with wave.open(buf, 'w') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(RATE)
+        wf.writeframes(pcm.tobytes())
+    return base64.b64encode(buf.getvalue()).decode()
+
+BELL_B64 = _build_bell_b64()
+
+def _play_bell():
+    """Inject a hidden HTML audio element that auto-plays the bell once."""
+    st.markdown(
+        f'<audio autoplay style="display:none">'
+        f'<source src="data:audio/wav;base64,{BELL_B64}" type="audio/wav">'
+        f'</audio>',
+        unsafe_allow_html=True
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page config
@@ -109,8 +153,8 @@ def _init():
         shaved_top=False, shaved_bottom=False,
         step1=False, step2_buy=False, step2_sell=False,
         step3_buy=False, step3_sell=False,
-        signal="WAIT", last_update=None,
-        candle_count=0, tick_count=0,
+        signal="WAIT", prev_signal="WAIT", last_update=None,
+        candle_count=0, tick_count=0, bell_played=False,
     )
     for k, v in defs.items():
         if k not in st.session_state:
@@ -546,8 +590,18 @@ else:                    st.info(st.session_state.status_msg)
 
 st.divider()
 
-# ── Signal Banner ─────────────────────────────────────────────────────────────
-sig = st.session_state.signal
+# ── Signal Banner + Bell Audio ────────────────────────────────────────────────
+sig      = st.session_state.signal
+prev_sig = st.session_state.prev_signal
+
+# Ring the bell when a NEW signal fires (transition from WAIT → LONG or SHORT)
+# Also re-ring if signal flips from LONG → SHORT or vice versa
+if sig in ("LONG", "SHORT") and sig != prev_sig:
+    _play_bell()
+    st.session_state.prev_signal = sig
+elif sig == "WAIT" and prev_sig != "WAIT":
+    st.session_state.prev_signal = "WAIT"
+
 if sig == "LONG":
     st.markdown(f"""<div class="signal-long">
     <div style="font-size:72px;font-weight:900;">🔵 ALL-BLUE GO LONG 🔵</div>
