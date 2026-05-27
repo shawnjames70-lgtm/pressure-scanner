@@ -148,10 +148,26 @@ def _init():
         running=False,
         status_msg="Enter your Tastytrade credentials to start the scanner.",
         status_type="info",
-        candles=deque(maxlen=100),
-        tick_val=0.0, price=0.0, volume=0.0, sma_vol=0.0,
-        shaved_top=False, shaved_bottom=False,
-        step1=False, step2_buy=False, step2_sell=False,
+        candles_5m=deque(maxlen=100),
+        candles_15m=deque(maxlen=100),
+        candles_30m=deque(maxlen=100),
+        tick_val=0.0, price=0.0,
+        
+        # 5m state
+        vol_5m=0.0, sma_5m=0.0,
+        st_5m=False, sb_5m=False,
+        s1_5m=False, s2b_5m=False, s2s_5m=False,
+        
+        # 15m state
+        vol_15m=0.0, sma_15m=0.0,
+        st_15m=False, sb_15m=False,
+        s1_15m=False, s2b_15m=False, s2s_15m=False,
+        
+        # 30m state
+        vol_30m=0.0, sma_30m=0.0,
+        st_30m=False, sb_30m=False,
+        s1_30m=False, s2b_30m=False, s2s_30m=False,
+        
         step3_buy=False, step3_sell=False,
         signal="WAIT", prev_signal="WAIT", last_update=None,
         candle_count=0, tick_count=0, bell_played=False,
@@ -202,9 +218,9 @@ def _get_quote_token(session_token, is_test):
 # ─────────────────────────────────────────────────────────────────────────────
 # 3-Step logic
 # ─────────────────────────────────────────────────────────────────────────────
-def _compute(candles_list, tick_val, sma_period, tick_thr):
+def _compute_tf(candles_list, sma_period):
     if len(candles_list) < 2:
-        return {}
+        return None
     df = pd.DataFrame(candles_list)
     df["vol_sma"] = df["volume"].rolling(min(sma_period, len(df))).mean()
     c = df.iloc[-1]
@@ -215,19 +231,36 @@ def _compute(candles_list, tick_val, sma_period, tick_thr):
     st_    = (price >= float(c["high"]) - rng * 0.10) if rng > 0 else False
     sb_    = (price <= float(c["low"])  + rng * 0.10) if rng > 0 else False
     s1     = volume > sma_v and sma_v > 0
-    s2b    = st_; s2s = sb_
-    s3b    = tick_val > tick_thr; s3s = tick_val < -tick_thr
-    sig    = "LONG"  if (s1 and s2b and s3b) else \
-             "SHORT" if (s1 and s2s and s3s) else "WAIT"
     return dict(price=price, volume=volume, sma_vol=sma_v,
-                shaved_top=st_, shaved_bottom=sb_,
-                step1=s1, step2_buy=s2b, step2_sell=s2s,
-                step3_buy=s3b, step3_sell=s3s, signal=sig)
+                st=st_, sb=sb_, s1=s1, s2b=st_, s2s=sb_)
+
+def _eval_signal(tick_val, tick_thr):
+    s3b = tick_val > tick_thr
+    s3s = tick_val < -tick_thr
+    st.session_state.step3_buy  = s3b
+    st.session_state.step3_sell = s3s
+    
+    # Check if ALL timeframes agree for LONG
+    long_5m  = st.session_state.s1_5m  and st.session_state.s2b_5m
+    long_15m = st.session_state.s1_15m and st.session_state.s2b_15m
+    long_30m = st.session_state.s1_30m and st.session_state.s2b_30m
+    
+    # Check if ALL timeframes agree for SHORT
+    short_5m  = st.session_state.s1_5m  and st.session_state.s2s_5m
+    short_15m = st.session_state.s1_15m and st.session_state.s2s_15m
+    short_30m = st.session_state.s1_30m and st.session_state.s2s_30m
+    
+    if long_5m and long_15m and long_30m and s3b:
+        st.session_state.signal = "LONG"
+    elif short_5m and short_15m and short_30m and s3s:
+        st.session_state.signal = "SHORT"
+    else:
+        st.session_state.signal = "WAIT"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FEED_DATA parser — dxFeed LIST format (list of dicts)
 # ─────────────────────────────────────────────────────────────────────────────
-def _parse_feed(channel, data, candle_ch, tick_ch, sma_period, tick_thr):
+def _parse_feed(channel, data, ch_5m, ch_15m, ch_30m, tick_ch, sma_period, tick_thr):
     if not isinstance(data, list):
         return
     for evt in data:
@@ -235,7 +268,7 @@ def _parse_feed(channel, data, candle_ch, tick_ch, sma_period, tick_thr):
             continue
         etype = evt.get("eventType", "")
 
-        if etype == "Candle" and channel == candle_ch:
+        if etype == "Candle" and channel in (ch_5m, ch_15m, ch_30m):
             try:
                 close  = evt.get("close",  0)
                 high   = evt.get("high",   0)
@@ -251,19 +284,42 @@ def _parse_feed(channel, data, candle_ch, tick_ch, sma_period, tick_thr):
                     close =float(close),
                     volume=float(volume or 0),
                 )
-                cl = list(st.session_state.candles)
+                
+                tf_key = ""
+                if channel == ch_5m:
+                    cl = list(st.session_state.candles_5m)
+                    tf_key = "5m"
+                elif channel == ch_15m:
+                    cl = list(st.session_state.candles_15m)
+                    tf_key = "15m"
+                else:
+                    cl = list(st.session_state.candles_30m)
+                    tf_key = "30m"
+                    
                 if cl and cl[-1]["time"] == row["time"]:
                     cl[-1] = row
-                    st.session_state.candles = deque(cl, maxlen=100)
                 else:
-                    st.session_state.candles.append(row)
+                    cl.append(row)
+                
+                if channel == ch_5m:   st.session_state.candles_5m  = deque(cl, maxlen=100)
+                elif channel == ch_15m: st.session_state.candles_15m = deque(cl, maxlen=100)
+                else:                  st.session_state.candles_30m = deque(cl, maxlen=100)
+                
                 st.session_state.candle_count += 1
-                res = _compute(list(st.session_state.candles),
-                               st.session_state.tick_val, sma_period, tick_thr)
+                
+                res = _compute_tf(cl, sma_period)
                 if res:
-                    for k, v in res.items():
-                        st.session_state[k] = v
-                    st.session_state.last_update = time.strftime("%H:%M:%S")
+                    st.session_state.price = res["price"] # Last updated price
+                    st.session_state[f"vol_{tf_key}"] = res["volume"]
+                    st.session_state[f"sma_{tf_key}"] = res["sma_vol"]
+                    st.session_state[f"st_{tf_key}"]  = res["st"]
+                    st.session_state[f"sb_{tf_key}"]  = res["sb"]
+                    st.session_state[f"s1_{tf_key}"]  = res["s1"]
+                    st.session_state[f"s2b_{tf_key}"] = res["s2b"]
+                    st.session_state[f"s2s_{tf_key}"] = res["s2s"]
+                    
+                _eval_signal(st.session_state.tick_val, tick_thr)
+                st.session_state.last_update = time.strftime("%H:%M:%S")
             except Exception:
                 pass
 
@@ -275,15 +331,7 @@ def _parse_feed(channel, data, candle_ch, tick_ch, sma_period, tick_thr):
                 tv = float(price)
                 st.session_state.tick_val   = tv
                 st.session_state.tick_count += 1
-                s3b = tv > tick_thr; s3s = tv < -tick_thr
-                st.session_state.step3_buy  = s3b
-                st.session_state.step3_sell = s3s
-                s1  = st.session_state.step1
-                s2b = st.session_state.step2_buy
-                s2s = st.session_state.step2_sell
-                if s1 and s2b and s3b:   st.session_state.signal = "LONG"
-                elif s1 and s2s and s3s: st.session_state.signal = "SHORT"
-                else:                    st.session_state.signal = "WAIT"
+                _eval_signal(tv, tick_thr)
                 st.session_state.last_update = time.strftime("%H:%M:%S")
             except Exception:
                 pass
@@ -307,9 +355,11 @@ async def _stream(dxlink_url, auth_token, symbol, tick_symbol, sma_period, tick_
     from ssl import create_default_context
     from datetime import datetime, timezone
 
-    ssl_ctx   = create_default_context()
-    CANDLE_CH = 1
-    TICK_CH   = 3
+    ssl_ctx = create_default_context()
+    CH_5M   = 1
+    CH_15M  = 2
+    CH_30M  = 3
+    TICK_CH = 4
 
     async with AsyncClient(verify=ssl_ctx) as client:
         async with aconnect_ws(
@@ -332,31 +382,32 @@ async def _stream(dxlink_url, auth_token, symbol, tick_symbol, sma_period, tick_
                 if msg.get("type") == "AUTH_STATE" and msg.get("state") == "AUTHORIZED":
                     break
 
-            await send({"type":"CHANNEL_REQUEST","channel":CANDLE_CH,
-                        "service":"FEED","parameters":{"contract":"AUTO"}})
-            await send({"type":"CHANNEL_REQUEST","channel":TICK_CH,
-                        "service":"FEED","parameters":{"contract":"AUTO"}})
+            for ch in (CH_5M, CH_15M, CH_30M, TICK_CH):
+                await send({"type":"CHANNEL_REQUEST","channel":ch,
+                            "service":"FEED","parameters":{"contract":"AUTO"}})
 
             opened = set()
-            for _ in range(10):
+            for _ in range(15):
                 raw = await asyncio.wait_for(ws.receive_text(), timeout=5.0)
                 msg = json.loads(raw)
                 if msg.get("type") == "CHANNEL_OPENED":
                     opened.add(msg.get("channel"))
-                if CANDLE_CH in opened and TICK_CH in opened:
+                if {CH_5M, CH_15M, CH_30M, TICK_CH}.issubset(opened):
                     break
 
             from_time = int(datetime(2024,1,1,tzinfo=timezone.utc).timestamp()*1000)
-            await send({"type":"FEED_SUBSCRIPTION","channel":CANDLE_CH,
-                        "add":[{"type":"Candle",
-                                "symbol":f"{symbol}{{=5m}}",
-                                "fromTime":from_time}]})
+            await send({"type":"FEED_SUBSCRIPTION","channel":CH_5M,
+                        "add":[{"type":"Candle","symbol":f"{symbol}{{=5m}}","fromTime":from_time}]})
+            await send({"type":"FEED_SUBSCRIPTION","channel":CH_15M,
+                        "add":[{"type":"Candle","symbol":f"{symbol}{{=15m}}","fromTime":from_time}]})
+            await send({"type":"FEED_SUBSCRIPTION","channel":CH_30M,
+                        "add":[{"type":"Candle","symbol":f"{symbol}{{=30m}}","fromTime":from_time}]})
             await send({"type":"FEED_SUBSCRIPTION","channel":TICK_CH,
                         "add":[{"type":"Trade","symbol":tick_symbol},
                                {"type":"Quote","symbol":tick_symbol}]})
 
             st.session_state.status_msg  = (
-                f"🔴 LIVE — {symbol} 5-min candles | {tick_symbol} TICK | "
+                f"🔴 LIVE — {symbol} MTF (5m/15m/30m) | {tick_symbol} TICK | "
                 f"dxFeed WebSocket connected"
             )
             st.session_state.status_type = "success"
@@ -371,7 +422,7 @@ async def _stream(dxlink_url, auth_token, symbol, tick_symbol, sma_period, tick_
                 mtype = msg.get("type")
                 if mtype == "FEED_DATA":
                     _parse_feed(msg.get("channel"), msg.get("data",[]),
-                                CANDLE_CH, TICK_CH, sma_period, tick_thr)
+                                CH_5M, CH_15M, CH_30M, TICK_CH, sma_period, tick_thr)
                 elif mtype == "KEEPALIVE":
                     await send({"type":"KEEPALIVE","channel":0})
                 elif mtype == "AUTH_STATE" and msg.get("state") == "UNAUTHORIZED":
@@ -536,13 +587,15 @@ with st.sidebar:
     logout_btn = st.button("🚪 Logout", use_container_width=True)
     st.divider()
     st.markdown(f"""
-**3-Step Pressure Method**
+**3-Step Pressure Method (MTF)**
 
 `Step 1` · Volume > {vol_sma_period}-period SMA
 
 `Step 2` · Shaved top/bottom (10%)
 
 `Step 3` · NYSE TICK ±{tick_threshold} confirm
+
+**Confirmation** · 5m + 15m + 30m MUST AGREE
 """)
     if st.session_state.running:
         st.success("🔴 Stream Active")
@@ -606,36 +659,31 @@ if sig == "LONG":
     st.markdown(f"""<div class="signal-long">
     <div style="font-size:72px;font-weight:900;">🔵 ALL-BLUE GO LONG 🔵</div>
     <div style="font-size:20px;margin-top:12px;opacity:0.90;">
-      Volume Surge ✅ &nbsp;·&nbsp; Shaved Top ✅ &nbsp;·&nbsp;
+      MTF (5m+15m+30m) Volume Surge ✅ &nbsp;·&nbsp; MTF Shaved Top ✅ &nbsp;·&nbsp;
       TICK &gt; +{tick_threshold} ✅
     </div></div>""", unsafe_allow_html=True)
 elif sig == "SHORT":
     st.markdown(f"""<div class="signal-short">
     <div style="font-size:72px;font-weight:900;">🟡 ALL-YELLOW GO SHORT 🟡</div>
     <div style="font-size:20px;margin-top:12px;opacity:0.90;">
-      Volume Surge ✅ &nbsp;·&nbsp; Shaved Bottom ✅ &nbsp;·&nbsp;
+      MTF (5m+15m+30m) Volume Surge ✅ &nbsp;·&nbsp; MTF Shaved Bottom ✅ &nbsp;·&nbsp;
       TICK &lt; -{tick_threshold} ✅
     </div></div>""", unsafe_allow_html=True)
 else:
     st.markdown("""<div class="signal-wait">
     <div style="font-size:44px;font-weight:700;">⏳ Waiting for Setup...</div>
     <div style="font-size:16px;margin-top:10px;color:#666;">
-      No confirmed signal yet. Monitor the 3-Step checklist below.
+      No confirmed MTF signal yet. Monitor the 5m/15m/30m checklist below.
     </div></div>""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ── Live Metrics ──────────────────────────────────────────────────────────────
-price  = st.session_state.price
-volume = st.session_state.volume
-sma_v  = st.session_state.sma_vol
-tick   = st.session_state.tick_val
-vd     = volume - sma_v
-vdc    = "dpos" if vd >= 0 else "dneg"
-vds    = f"{'▲' if vd>=0 else '▼'} {abs(vd):,.0f} vs SMA"
-tc     = ("#4d9fff" if tick > tick_threshold
-          else "#ffd700" if tick < -tick_threshold
-          else "#e6edf3")
+price = st.session_state.price
+tick  = st.session_state.tick_val
+tc    = ("#4d9fff" if tick > tick_threshold
+         else "#ffd700" if tick < -tick_threshold
+         else "#e6edf3")
 
 c1, c2, c3, c4 = st.columns(4)
 with c1:
@@ -644,15 +692,22 @@ with c1:
     <div class="metric-value">${price:,.2f}</div>
     </div>""", unsafe_allow_html=True)
 with c2:
+    v5 = st.session_state.vol_5m
+    s5 = st.session_state.sma_5m
+    vd5 = v5 - s5
     st.markdown(f"""<div class="metric-card">
-    <div class="metric-label">5-Min Volume</div>
-    <div class="metric-value">{volume:,.0f}</div>
-    <div class="{vdc}">{vds}</div>
+    <div class="metric-label">5m Volume vs SMA</div>
+    <div class="metric-value">{v5:,.0f}</div>
+    <div class="{'dpos' if vd5>=0 else 'dneg'}">{'▲' if vd5>=0 else '▼'} {abs(vd5):,.0f} vs SMA</div>
     </div>""", unsafe_allow_html=True)
 with c3:
+    v15 = st.session_state.vol_15m
+    s15 = st.session_state.sma_15m
+    vd15 = v15 - s15
     st.markdown(f"""<div class="metric-card">
-    <div class="metric-label">Vol SMA ({vol_sma_period})</div>
-    <div class="metric-value">{sma_v:,.0f}</div>
+    <div class="metric-label">15m Volume vs SMA</div>
+    <div class="metric-value">{v15:,.0f}</div>
+    <div class="{'dpos' if vd15>=0 else 'dneg'}">{'▲' if vd15>=0 else '▼'} {abs(vd15):,.0f} vs SMA</div>
     </div>""", unsafe_allow_html=True)
 with c4:
     st.markdown(f"""<div class="metric-card">
@@ -665,49 +720,62 @@ with c4:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ── 3-Step Checklist ──────────────────────────────────────────────────────────
-st.markdown("### 📋 3-Step Pressure Checklist")
+# ── Multi-Timeframe Checklist ─────────────────────────────────────────────────
+st.markdown("### 📋 Multi-Timeframe Pressure Checklist")
 bc, sc = st.columns(2)
 
 def _card(cls, icon, title, detail):
     return (f'<div class="{cls}">{icon} <b>{title}</b><br>'
             f'<span style="font-weight:normal;font-size:13px;">{detail}</span></div>')
 
-i1  = "✅" if st.session_state.step1      else "❌"
-i2b = "✅" if st.session_state.step2_buy  else "❌"
-i2s = "✅" if st.session_state.step2_sell else "❌"
+def _tf_status(tf_name, vol, sma, st_, sb_, s1, s2b, s2s):
+    # Buy side
+    i1b = "✅" if s1 else "❌"
+    i2b = "✅" if s2b else "❌"
+    c1b = "step-pass" if s1 else "step-fail"
+    c2b = "step-pass" if s2b else "step-fail"
+    buy_html = f"""
+        {_card(c1b, i1b, f"{tf_name} Vol Surge", f"Vol: {vol:,.0f} | SMA: {sma:,.0f}")}
+        {_card(c2b, i2b, f"{tf_name} Shaved Top", "Close in top 10%")}
+    """
+    # Sell side
+    i1s = "✅" if s1 else "❌"
+    i2s = "✅" if s2s else "❌"
+    c1s = "step-pass" if s1 else "step-fail"
+    c2s = "step-pass" if s2s else "step-fail"
+    sell_html = f"""
+        {_card(c1s, i1s, f"{tf_name} Vol Surge", f"Vol: {vol:,.0f} | SMA: {sma:,.0f}")}
+        {_card(c2s, i2s, f"{tf_name} Shaved Bottom", "Close in bottom 10%")}
+    """
+    return buy_html, sell_html
+
+b5, s5   = _tf_status("5m",  st.session_state.vol_5m,  st.session_state.sma_5m,  st.session_state.st_5m,  st.session_state.sb_5m,  st.session_state.s1_5m,  st.session_state.s2b_5m,  st.session_state.s2s_5m)
+b15, s15 = _tf_status("15m", st.session_state.vol_15m, st.session_state.sma_15m, st.session_state.st_15m, st.session_state.sb_15m, st.session_state.s1_15m, st.session_state.s2b_15m, st.session_state.s2s_15m)
+b30, s30 = _tf_status("30m", st.session_state.vol_30m, st.session_state.sma_30m, st.session_state.st_30m, st.session_state.sb_30m, st.session_state.s1_30m, st.session_state.s2b_30m, st.session_state.s2s_30m)
+
 i3b = "✅" if st.session_state.step3_buy  else "❌"
 i3s = "✅" if st.session_state.step3_sell else "❌"
-c1_ = "step-pass" if st.session_state.step1      else "step-fail"
-c2b = "step-pass" if st.session_state.step2_buy  else "step-fail"
-c2s = "step-pass" if st.session_state.step2_sell else "step-fail"
 c3b = "step-pass" if st.session_state.step3_buy  else "step-fail"
 c3s = "step-pass" if st.session_state.step3_sell else "step-fail"
 
 with bc:
     st.markdown("#### 🔵 BUY Conditions (Blue Signal)")
-    st.markdown(_card(c1_, i1, "Step 1 — Volume Surge",
-        f"Current vol: {volume:,.0f} &nbsp;|&nbsp; SMA({vol_sma_period}): {sma_v:,.0f}"),
-        unsafe_allow_html=True)
-    st.markdown(_card(c2b, i2b, "Step 2 — Shaved Top (Buy Pressure)",
-        "Close in top 10% of 5-min candle range"), unsafe_allow_html=True)
-    st.markdown(_card(c3b, i3b, f"Step 3 — TICK Bullish (> +{tick_threshold})",
-        f"Current $TICK: {tick:+.0f}"), unsafe_allow_html=True)
+    st.markdown(b5, unsafe_allow_html=True)
+    st.markdown(b15, unsafe_allow_html=True)
+    st.markdown(b30, unsafe_allow_html=True)
+    st.markdown(_card(c3b, i3b, f"Step 3 — TICK Bullish (> +{tick_threshold})", f"Current $TICK: {tick:+.0f}"), unsafe_allow_html=True)
 
 with sc:
     st.markdown("#### 🟡 SELL Conditions (Yellow Signal)")
-    st.markdown(_card(c1_, i1, "Step 1 — Volume Surge",
-        f"Current vol: {volume:,.0f} &nbsp;|&nbsp; SMA({vol_sma_period}): {sma_v:,.0f}"),
-        unsafe_allow_html=True)
-    st.markdown(_card(c2s, i2s, "Step 2 — Shaved Bottom (Sell Pressure)",
-        "Close in bottom 10% of 5-min candle range"), unsafe_allow_html=True)
-    st.markdown(_card(c3s, i3s, f"Step 3 — TICK Bearish (< -{tick_threshold})",
-        f"Current $TICK: {tick:+.0f}"), unsafe_allow_html=True)
+    st.markdown(s5, unsafe_allow_html=True)
+    st.markdown(s15, unsafe_allow_html=True)
+    st.markdown(s30, unsafe_allow_html=True)
+    st.markdown(_card(c3s, i3s, f"Step 3 — TICK Bearish (< -{tick_threshold})", f"Current $TICK: {tick:+.0f}"), unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ── Candle History Table ──────────────────────────────────────────────────────
-cl = list(st.session_state.candles)
+cl = list(st.session_state.candles_5m)
 if cl:
     st.markdown("### 📊 Recent 5-Minute Candles")
     df = pd.DataFrame(cl).tail(15).copy()
