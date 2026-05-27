@@ -544,7 +544,7 @@ st.markdown(f"""
   </div>
   <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:#555;">
     {'<span style="color:#4d9fff;">&#9679; LIVE</span>' if st.session_state.running else '<span style="color:#333;">&#9679; OFFLINE</span>'}
-    &nbsp;&nbsp;{time.strftime('%H:%M:%S')}
+    &nbsp;&nbsp;{__import__('datetime').datetime.now(__import__('zoneinfo').ZoneInfo('America/New_York')).strftime('%I:%M:%S %p ET')}
   </div>
 </div>
 """, unsafe_allow_html=True)
