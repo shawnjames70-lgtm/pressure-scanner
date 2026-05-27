@@ -106,7 +106,7 @@ h1,h2,h3,h4{color:#0f172a;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
   overflow:hidden;white-space:nowrap;padding:8px 0;margin-bottom:16px;}
 .ticker-inner{
   display:inline-block;animation:scroll-left 20s linear infinite;
-  font-family:'Share Tech Mono',monospace;font-size:14px;letter-spacing:1px;}
+  font-family:Arial,Helvetica,'Courier New',monospace;font-size:14px;letter-spacing:0.5px;}
 @keyframes scroll-left{
   0%{transform:translateX(100vw)}
   100%{transform:translateX(-100%)}}
@@ -559,16 +559,17 @@ tf1 = tf.get("1m",{}); tf5 = tf.get("5m",{}); tf15 = tf.get("15m",{}); tf30 = tf
 rvol1  = tf1.get("rvol",0); rvol5  = tf5.get("rvol",0)
 rvol15 = tf15.get("rvol",0); rvol30 = tf30.get("rvol",0)
 
+span_style = 'font-family:Arial,Helvetica,sans-serif;'
 tape_items = [
-    f'<span style="color:{pc};">{symbol} ${price:,.2f}</span>',
-    f'<span style="color:#888;">VWAP ${vwap:,.2f}</span>',
-    f'<span style="color:{tc};">$TICK {tick:+.0f}</span>',
-    f'<span style="color:{ac};">$ADD {add:+.0f}</span>',
-    f'<span style="color:#888;">RVOL 1m:{rvol1:.1f}x  5m:{rvol5:.1f}x  15m:{rvol15:.1f}x  30m:{rvol30:.1f}x</span>',
-    f'<span style="color:#555;">Candles:{st.session_state.candle_count}  TICK updates:{st.session_state.tick_count}</span>',
+    f'<span style="color:{pc};{span_style}">{symbol} ${price:,.2f}</span>',
+    f'<span style="color:#475569;{span_style}">VWAP ${vwap:,.2f}</span>',
+    f'<span style="color:{tc};{span_style}">TICK {tick:+.0f}</span>',
+    f'<span style="color:{ac};{span_style}">ADD {add:+.0f}</span>',
+    f'<span style="color:#475569;{span_style}">RVOL 1m:{rvol1:.1f}x 5m:{rvol5:.1f}x 15m:{rvol15:.1f}x 30m:{rvol30:.1f}x</span>',
+    f'<span style="color:#94a3b8;{span_style}">Candles:{st.session_state.candle_count} TICK:{st.session_state.tick_count}</span>',
 ]
-tape_html = '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;'.join(tape_items)
-st.markdown(f'<div class="ticker-tape"><div class="ticker-inner">{tape_html}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;{tape_html}</div></div>', unsafe_allow_html=True)
+tape_html = '&nbsp;&nbsp;|&nbsp;&nbsp;'.join(tape_items)
+st.markdown(f'<div class="ticker-tape"><div class="ticker-inner" style="font-family:Arial,Helvetica,sans-serif;">{tape_html}&nbsp;&nbsp;|&nbsp;&nbsp;{tape_html}</div></div>', unsafe_allow_html=True)
 
 # ── Signal Banner & Bell ──────────────────────────────────────────────────────
 sig = st.session_state.signal
