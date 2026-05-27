@@ -85,68 +85,123 @@ def _play_bell(strikes=3):
     )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CSS
+# CSS — Trading Terminal Visual Theme
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+
 html,body,[data-testid="stAppViewContainer"]{
-  font-family:'Courier New',monospace;background:#0d1117;}
-[data-testid="stSidebar"]{background:#0d1117;color:#c9d1d9;}
-[data-testid="stSidebar"] label{color:#c9d1d9 !important;}
-h1,h2,h3,h4{color:#e6edf3;}
+  font-family:'Share Tech Mono',monospace;
+  background:radial-gradient(ellipse at top,#0a0e1a 0%,#050810 100%);
+  color:#c9d1d9;}
+[data-testid="stSidebar"]{background:#070b14;color:#c9d1d9;border-right:1px solid #1a2233;}
+[data-testid="stSidebar"] label{color:#8b949e !important;}
+[data-testid="stSidebar"] h2{color:#4d9fff !important;}
+h1,h2,h3,h4{color:#e6edf3;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
 
-/* Tiered Alert Banners */
-.signal-full-long{
-  background:linear-gradient(135deg,#0066ff 0%,#0044cc 100%);
-  color:#fff;padding:50px 20px;border-radius:20px;text-align:center;
-  box-shadow:0 0 80px #0066ff99;animation:pg 1s infinite alternate;margin:10px 0;}
-.signal-full-short{
-  background:linear-gradient(135deg,#ffd700 0%,#ffaa00 100%);
-  color:#000;padding:50px 20px;border-radius:20px;text-align:center;
-  box-shadow:0 0 80px #ffd70099;animation:pr 1s infinite alternate;margin:10px 0;}
+/* Ticker Tape */
+.ticker-tape{
+  background:#070b14;border-top:1px solid #1a2233;border-bottom:1px solid #1a2233;
+  overflow:hidden;white-space:nowrap;padding:8px 0;margin-bottom:16px;}
+.ticker-inner{
+  display:inline-block;animation:scroll-left 20s linear infinite;
+  font-family:'Share Tech Mono',monospace;font-size:14px;letter-spacing:1px;}
+@keyframes scroll-left{
+  0%{transform:translateX(100vw)}
+  100%{transform:translateX(-100%)}}
 
-.signal-strong-long{
-  background:linear-gradient(135deg,#0044cc 0%,#002266 100%);
-  color:#fff;padding:30px 20px;border-radius:15px;text-align:center;
-  border:2px solid #0066ff;margin:10px 0;}
-.signal-strong-short{
-  background:linear-gradient(135deg,#b39700 0%,#665500 100%);
-  color:#fff;padding:30px 20px;border-radius:15px;text-align:center;
-  border:2px solid #ffd700;margin:10px 0;}
+/* TICK Gauge */
+.gauge-wrap{background:#0d1117;border:1px solid #1a2233;border-radius:16px;padding:16px;text-align:center;}
+.gauge-label{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;}
+.gauge-value{font-size:44px;font-weight:900;font-family:'Orbitron',sans-serif;margin:4px 0;}
+.gauge-bar-bg{background:#1a2233;border-radius:8px;height:14px;width:100%;margin:8px 0;position:relative;overflow:visible;}
+.gauge-bar-fill{height:14px;border-radius:8px;transition:width 0.4s ease,background 0.4s ease;}
+.gauge-needle{position:absolute;top:-4px;width:4px;height:22px;border-radius:2px;
+  background:#fff;transform:translateX(-50%);transition:left 0.4s ease;box-shadow:0 0 8px #fff;}
+.gauge-ticks{display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:2px;}
 
-.signal-early-long{
-  background:#1c1c2e;color:#4d9fff;padding:20px;border-radius:10px;
-  text-align:center;border:1px dashed #4d9fff;margin:10px 0;}
-.signal-early-short{
-  background:#2a2000;color:#ffd700;padding:20px;border-radius:10px;
-  text-align:center;border:1px dashed #ffd700;margin:10px 0;}
-
-.signal-wait{
-  background:#1c1c2e;color:#888;padding:40px 20px;
-  border-radius:20px;text-align:center;border:2px solid #333;margin:10px 0;}
-
-@keyframes pg{from{box-shadow:0 0 40px #0066ff66}to{box-shadow:0 0 100px #0066ffcc}}
-@keyframes pr{from{box-shadow:0 0 40px #ffd70066}to{box-shadow:0 0 100px #ffd700cc}}
-
-.step-pass{
-  background:#0a1a3a;border-left:6px solid #4d9fff;
-  padding:14px 18px;border-radius:8px;margin:6px 0;
-  color:#4d9fff;font-weight:bold;font-family:'Courier New',monospace;}
-.step-fail{
-  background:#2a2000;border-left:6px solid #ffd700;
-  padding:14px 18px;border-radius:8px;margin:6px 0;
-  color:#ffd700;font-weight:bold;font-family:'Courier New',monospace;}
-
+/* Metric Cards */
 .metric-card{
-  background:#161b22;border:1px solid #30363d;border-radius:14px;
-  padding:22px;text-align:center;margin:4px;}
-.metric-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:2px;}
-.metric-value{font-size:32px;font-weight:bold;color:#e6edf3;margin:10px 0 4px;}
-.dpos{color:#4d9fff;font-size:13px;}
-.dneg{color:#ffd700;font-size:13px;}
+  background:linear-gradient(135deg,#0d1117 0%,#111827 100%);
+  border:1px solid #1e2d45;border-radius:14px;
+  padding:20px 16px;text-align:center;margin:4px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.metric-label{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;}
+.metric-value{font-size:30px;font-weight:900;font-family:'Orbitron',sans-serif;margin:6px 0 4px;}
+.metric-sub{font-size:11px;color:#555;}
+
+/* Candle Bars */
+.candle-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;}
+.candle-body{height:18px;border-radius:3px;min-width:4px;display:inline-block;}
+.candle-label{color:#8b949e;width:30px;text-align:right;font-size:11px;}
+.candle-price{color:#e6edf3;font-size:13px;font-weight:bold;width:70px;}
+.candle-vol{color:#555;font-size:10px;}
+
+/* Signal Banners */
+.signal-full-long{
+  background:linear-gradient(135deg,#0033aa 0%,#0066ff 50%,#0033aa 100%);
+  background-size:200% 200%;animation:pg 0.8s infinite alternate,shimmer 3s linear infinite;
+  color:#fff;padding:40px 20px;border-radius:20px;text-align:center;
+  box-shadow:0 0 60px #0066ffaa,0 0 120px #0066ff44;margin:10px 0;
+  font-family:'Orbitron',sans-serif;}
+.signal-full-short{
+  background:linear-gradient(135deg,#aa7700 0%,#ffd700 50%,#aa7700 100%);
+  background-size:200% 200%;animation:pr 0.8s infinite alternate,shimmer 3s linear infinite;
+  color:#000;padding:40px 20px;border-radius:20px;text-align:center;
+  box-shadow:0 0 60px #ffd700aa,0 0 120px #ffd70044;margin:10px 0;
+  font-family:'Orbitron',sans-serif;}
+.signal-strong-long{
+  background:linear-gradient(135deg,#001a55 0%,#0044cc 100%);
+  color:#fff;padding:28px 20px;border-radius:15px;text-align:center;
+  border:2px solid #0066ff;margin:10px 0;font-family:'Orbitron',sans-serif;
+  box-shadow:0 0 30px #0066ff55;}
+.signal-strong-short{
+  background:linear-gradient(135deg,#332200 0%,#996600 100%);
+  color:#fff;padding:28px 20px;border-radius:15px;text-align:center;
+  border:2px solid #ffd700;margin:10px 0;font-family:'Orbitron',sans-serif;
+  box-shadow:0 0 30px #ffd70055;}
+.signal-early-long{
+  background:#0a0e1a;color:#4d9fff;padding:18px;border-radius:10px;
+  text-align:center;border:1px dashed #4d9fff;margin:10px 0;
+  font-family:'Orbitron',sans-serif;}
+.signal-early-short{
+  background:#1a1000;color:#ffd700;padding:18px;border-radius:10px;
+  text-align:center;border:1px dashed #ffd700;margin:10px 0;
+  font-family:'Orbitron',sans-serif;}
+.signal-wait{
+  background:#0a0e1a;color:#333;padding:36px 20px;
+  border-radius:20px;text-align:center;border:1px solid #1a2233;margin:10px 0;
+  font-family:'Orbitron',sans-serif;}
+
+@keyframes pg{from{box-shadow:0 0 40px #0066ff66,0 0 80px #0066ff22}to{box-shadow:0 0 80px #0066ffcc,0 0 160px #0066ff66}}
+@keyframes pr{from{box-shadow:0 0 40px #ffd70066,0 0 80px #ffd70022}to{box-shadow:0 0 80px #ffd700cc,0 0 160px #ffd70066}}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+/* Step Cards */
+.step-pass{
+  background:linear-gradient(90deg,#0a1a3a,#0d1f45);
+  border-left:5px solid #4d9fff;
+  padding:12px 16px;border-radius:8px;margin:5px 0;
+  color:#4d9fff;font-weight:bold;font-family:'Share Tech Mono',monospace;
+  box-shadow:inset 0 0 20px #0066ff11;}
+.step-fail{
+  background:linear-gradient(90deg,#1a1200,#221800);
+  border-left:5px solid #ffd700;
+  padding:12px 16px;border-radius:8px;margin:5px 0;
+  color:#ffd700;font-weight:bold;font-family:'Share Tech Mono',monospace;
+  box-shadow:inset 0 0 20px #ffd70011;}
+
 .login-box{
-  background:#161b22;border:1px solid #30363d;border-radius:16px;
-  padding:40px;max-width:480px;margin:60px auto;}
+  background:#0d1117;border:1px solid #1e2d45;border-radius:16px;
+  padding:40px;max-width:480px;margin:60px auto;
+  box-shadow:0 0 60px #0066ff22;}
+
+/* Scanline overlay */
+[data-testid="stAppViewContainer"]::before{
+  content:'';position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  z-index:9999;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -476,8 +531,44 @@ if (not st.session_state.running and not st.session_state.get("_auto_started") a
     st.session_state._auto_started = True
     _start_stream(st.session_state.dxlink_url, st.session_state.auth_token, symbol, tick_symbol, add_symbol, vol_sma_period, tick_threshold)
 
-st.markdown("# 🚀 3-Step Pressure Method (Tiered MTF)")
-if st.session_state.status_type == "success": st.success(st.session_state.status_msg)
+# ── Header ───────────────────────────────────────────────────────────────────
+price = st.session_state.price
+vwap  = st.session_state.vwap
+tick  = st.session_state.tick_val
+add   = st.session_state.add_val
+
+st.markdown(f"""
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px;">
+  <div style="font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:#4d9fff;letter-spacing:4px;">
+    🚀 3-STEP PRESSURE SCANNER
+  </div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:#555;">
+    {'<span style="color:#4d9fff;">&#9679; LIVE</span>' if st.session_state.running else '<span style="color:#333;">&#9679; OFFLINE</span>'}
+    &nbsp;&nbsp;{time.strftime('%H:%M:%S')}
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ── Ticker Tape ───────────────────────────────────────────────────────────────
+tc = "#4d9fff" if tick > tick_threshold else "#ffd700" if tick < -tick_threshold else "#e6edf3"
+ac = "#4d9fff" if add > 500 else "#ffd700" if add < -500 else "#e6edf3"
+pc = "#4d9fff" if price > vwap else "#ffd700" if price < vwap else "#e6edf3"
+
+tf = st.session_state.tf_state
+tf1 = tf.get("1m",{}); tf5 = tf.get("5m",{}); tf15 = tf.get("15m",{}); tf30 = tf.get("30m",{})
+rvol1  = tf1.get("rvol",0); rvol5  = tf5.get("rvol",0)
+rvol15 = tf15.get("rvol",0); rvol30 = tf30.get("rvol",0)
+
+tape_items = [
+    f'<span style="color:{pc};">{symbol} ${price:,.2f}</span>',
+    f'<span style="color:#888;">VWAP ${vwap:,.2f}</span>',
+    f'<span style="color:{tc};">$TICK {tick:+.0f}</span>',
+    f'<span style="color:{ac};">$ADD {add:+.0f}</span>',
+    f'<span style="color:#888;">RVOL 1m:{rvol1:.1f}x  5m:{rvol5:.1f}x  15m:{rvol15:.1f}x  30m:{rvol30:.1f}x</span>',
+    f'<span style="color:#555;">Candles:{st.session_state.candle_count}  TICK updates:{st.session_state.tick_count}</span>',
+]
+tape_html = '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;'.join(tape_items)
+st.markdown(f'<div class="ticker-tape"><div class="ticker-inner">{tape_html}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;{tape_html}</div></div>', unsafe_allow_html=True)
 
 # ── Signal Banner & Bell ──────────────────────────────────────────────────────
 sig = st.session_state.signal
@@ -490,92 +581,154 @@ if sig != prev_sig:
 
 if sig == "FULL_LONG":
     st.markdown(f"""<div class="signal-full-long">
-    <div style="font-size:64px;font-weight:900;">🔵 FULL CONFIRMATION: GO LONG 🔵</div>
-    <div style="font-size:20px;">1m + 5m + 15m + 30m ALL ALIGNED | TICK > +{tick_threshold}</div></div>""", unsafe_allow_html=True)
+    <div style="font-size:52px;font-weight:900;letter-spacing:4px;">🔵 FULL CONFIRMATION: GO LONG 🔵</div>
+    <div style="font-size:16px;opacity:0.85;margin-top:8px;">1m + 5m + 15m + 30m ALL ALIGNED &nbsp;|&nbsp; TICK &gt; +{tick_threshold} &nbsp;|&nbsp; $TICK: {tick:+.0f}</div></div>""", unsafe_allow_html=True)
 elif sig == "STRONG_LONG":
     st.markdown(f"""<div class="signal-strong-long">
-    <div style="font-size:48px;font-weight:900;">🟦 STRONG SIGNAL: GO LONG</div>
-    <div style="font-size:18px;">1m + 5m + 15m ALIGNED | TICK > +{tick_threshold}</div></div>""", unsafe_allow_html=True)
+    <div style="font-size:38px;font-weight:900;letter-spacing:3px;">🟦 STRONG SIGNAL: GO LONG</div>
+    <div style="font-size:14px;opacity:0.8;margin-top:6px;">1m + 5m + 15m ALIGNED &nbsp;|&nbsp; TICK &gt; +{tick_threshold} &nbsp;|&nbsp; $TICK: {tick:+.0f}</div></div>""", unsafe_allow_html=True)
 elif sig == "EARLY_LONG":
     st.markdown(f"""<div class="signal-early-long">
-    <div style="font-size:32px;font-weight:900;">🔹 EARLY ALERT: LONG WATCH</div>
-    <div style="font-size:16px;">1m + 5m ALIGNED | TICK > +{tick_threshold}</div></div>""", unsafe_allow_html=True)
+    <div style="font-size:26px;font-weight:900;letter-spacing:2px;">🔹 EARLY ALERT: LONG WATCH</div>
+    <div style="font-size:13px;margin-top:4px;">1m + 5m ALIGNED &nbsp;|&nbsp; TICK &gt; +{tick_threshold} &nbsp;|&nbsp; Awaiting 15m confirmation</div></div>""", unsafe_allow_html=True)
 elif sig == "FULL_SHORT":
     st.markdown(f"""<div class="signal-full-short">
-    <div style="font-size:64px;font-weight:900;">🟡 FULL CONFIRMATION: GO SHORT 🟡</div>
-    <div style="font-size:20px;">1m + 5m + 15m + 30m ALL ALIGNED | TICK < -{tick_threshold}</div></div>""", unsafe_allow_html=True)
+    <div style="font-size:52px;font-weight:900;letter-spacing:4px;">🟡 FULL CONFIRMATION: GO SHORT 🟡</div>
+    <div style="font-size:16px;opacity:0.85;margin-top:8px;">1m + 5m + 15m + 30m ALL ALIGNED &nbsp;|&nbsp; TICK &lt; -{tick_threshold} &nbsp;|&nbsp; $TICK: {tick:+.0f}</div></div>""", unsafe_allow_html=True)
 elif sig == "STRONG_SHORT":
     st.markdown(f"""<div class="signal-strong-short">
-    <div style="font-size:48px;font-weight:900;">🟨 STRONG SIGNAL: GO SHORT</div>
-    <div style="font-size:18px;">1m + 5m + 15m ALIGNED | TICK < -{tick_threshold}</div></div>""", unsafe_allow_html=True)
+    <div style="font-size:38px;font-weight:900;letter-spacing:3px;">🟨 STRONG SIGNAL: GO SHORT</div>
+    <div style="font-size:14px;opacity:0.8;margin-top:6px;">1m + 5m + 15m ALIGNED &nbsp;|&nbsp; TICK &lt; -{tick_threshold} &nbsp;|&nbsp; $TICK: {tick:+.0f}</div></div>""", unsafe_allow_html=True)
 elif sig == "EARLY_SHORT":
     st.markdown(f"""<div class="signal-early-short">
-    <div style="font-size:32px;font-weight:900;">🔸 EARLY ALERT: SHORT WATCH</div>
-    <div style="font-size:16px;">1m + 5m ALIGNED | TICK < -{tick_threshold}</div></div>""", unsafe_allow_html=True)
+    <div style="font-size:26px;font-weight:900;letter-spacing:2px;">🔸 EARLY ALERT: SHORT WATCH</div>
+    <div style="font-size:13px;margin-top:4px;">1m + 5m ALIGNED &nbsp;|&nbsp; TICK &lt; -{tick_threshold} &nbsp;|&nbsp; Awaiting 15m confirmation</div></div>""", unsafe_allow_html=True)
 else:
     st.markdown("""<div class="signal-wait">
-    <div style="font-size:36px;font-weight:700;">⏳ Waiting for Setup...</div>
-    <div style="font-size:16px;color:#666;">No 5m confirmation yet.</div></div>""", unsafe_allow_html=True)
+    <div style="font-size:28px;font-weight:700;letter-spacing:3px;">-- SCANNING FOR SETUP --</div>
+    <div style="font-size:13px;color:#444;margin-top:6px;">Monitoring 1m / 5m / 15m / 30m + TICK + ADD</div></div>""", unsafe_allow_html=True)
 
-# ── Live Metrics (VWAP, ADD, TICK) ────────────────────────────────────────────
-price = st.session_state.price
-vwap  = st.session_state.vwap
-tick  = st.session_state.tick_val
-add   = st.session_state.add_val
+# ── TICK Gauge + Metrics Row ──────────────────────────────────────────────────
+gcol, m1, m2, m3 = st.columns([2, 1, 1, 1])
 
-tc = "#4d9fff" if tick > tick_threshold else "#ffd700" if tick < -tick_threshold else "#e6edf3"
-ac = "#4d9fff" if add > 500 else "#ffd700" if add < -500 else "#e6edf3"
-pc = "#4d9fff" if price > vwap else "#ffd700" if price < vwap else "#e6edf3"
+with gcol:
+    # TICK gauge: range -1500 to +1500, needle position as %
+    TICK_RANGE = 1500
+    tick_pct = min(max((tick + TICK_RANGE) / (2 * TICK_RANGE) * 100, 0), 100)
+    bull_zone = tick > tick_threshold
+    bear_zone = tick < -tick_threshold
+    bar_color = "#4d9fff" if bull_zone else "#ffd700" if bear_zone else "#2a3a55"
+    needle_glow = "0 0 12px #4d9fff" if bull_zone else "0 0 12px #ffd700" if bear_zone else "0 0 6px #888"
+    tick_label = "BULLISH ▲" if bull_zone else "BEARISH ▼" if bear_zone else "NEUTRAL"
+    tick_color = "#4d9fff" if bull_zone else "#ffd700" if bear_zone else "#888"
+    
+    # Build zone markers
+    bull_pct = (tick_threshold + TICK_RANGE) / (2 * TICK_RANGE) * 100
+    bear_pct = (-tick_threshold + TICK_RANGE) / (2 * TICK_RANGE) * 100
+    
+    st.markdown(f"""
+    <div class="gauge-wrap">
+      <div class="gauge-label">NYSE $TICK INDEX</div>
+      <div class="gauge-value" style="color:{tick_color};text-shadow:{needle_glow};">{tick:+.0f}</div>
+      <div style="font-size:11px;color:{tick_color};letter-spacing:2px;margin-bottom:6px;">{tick_label}</div>
+      <div class="gauge-bar-bg">
+        <div style="position:absolute;left:{bear_pct:.1f}%;top:0;bottom:0;right:{100-bull_pct:.1f}%;background:#1a2233;border-radius:8px;"></div>
+        <div style="position:absolute;left:{bear_pct:.1f}%;top:0;height:14px;width:{bull_pct-bear_pct:.1f}%;background:#1a2a1a;border-radius:0;"></div>
+        <div class="gauge-bar-fill" style="width:{tick_pct:.1f}%;background:linear-gradient(90deg,#ffd700,{bar_color});"></div>
+        <div class="gauge-needle" style="left:{tick_pct:.1f}%;box-shadow:{needle_glow};"></div>
+        <div style="position:absolute;left:{bear_pct:.1f}%;top:-18px;font-size:9px;color:#ffd700;">-{tick_threshold}</div>
+        <div style="position:absolute;left:{bull_pct:.1f}%;top:-18px;font-size:9px;color:#4d9fff;">+{tick_threshold}</div>
+        <div style="position:absolute;left:50%;top:-18px;font-size:9px;color:#444;">0</div>
+      </div>
+      <div class="gauge-ticks"><span>-{TICK_RANGE}</span><span>-1000</span><span>-500</span><span>0</span><span>+500</span><span>+1000</span><span>+{TICK_RANGE}</span></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.markdown(f"""<div class="metric-card"><div class="metric-label">{symbol} Price</div>
-    <div class="metric-value" style="color:{pc}">${price:,.2f}</div>
-    <div style="font-size:12px;color:#888;">{"Above" if price>vwap else "Below"} VWAP</div></div>""", unsafe_allow_html=True)
-with c2:
-    st.markdown(f"""<div class="metric-card"><div class="metric-label">VWAP</div>
-    <div class="metric-value">${vwap:,.2f}</div>
-    <div style="font-size:12px;color:#888;">Institutional Trend</div></div>""", unsafe_allow_html=True)
-with c3:
-    st.markdown(f"""<div class="metric-card"><div class="metric-label">NYSE $TICK</div>
-    <div class="metric-value" style="color:{tc}">{tick:+.0f}</div>
-    <div style="font-size:12px;color:#888;">Momentum</div></div>""", unsafe_allow_html=True)
-with c4:
-    st.markdown(f"""<div class="metric-card"><div class="metric-label">NYSE $ADD</div>
-    <div class="metric-value" style="color:{ac}">{add:+.0f}</div>
-    <div style="font-size:12px;color:#888;">Market Breadth</div></div>""", unsafe_allow_html=True)
+with m1:
+    st.markdown(f"""<div class="metric-card">
+    <div class="metric-label">{symbol}</div>
+    <div class="metric-value" style="color:{pc};font-size:26px;">${price:,.2f}</div>
+    <div class="metric-sub">{"&#9650; Above VWAP" if price>vwap else "&#9660; Below VWAP"}</div>
+    <div class="metric-sub" style="color:#444;margin-top:4px;">VWAP ${vwap:,.2f}</div>
+    </div>""", unsafe_allow_html=True)
+
+with m2:
+    add_label = "ADVANCING" if add > 500 else "DECLINING" if add < -500 else "NEUTRAL"
+    st.markdown(f"""<div class="metric-card">
+    <div class="metric-label">NYSE $ADD</div>
+    <div class="metric-value" style="color:{ac};font-size:26px;">{add:+.0f}</div>
+    <div class="metric-sub" style="color:{ac};">{add_label}</div>
+    <div class="metric-sub" style="color:#444;margin-top:4px;">Breadth</div>
+    </div>""", unsafe_allow_html=True)
+
+with m3:
+    # Mini candle bar chart for 1m candles
+    cl1m = list(st.session_state.candles_1m)[-8:]
+    if cl1m:
+        prices = [c["close"] for c in cl1m]
+        p_min, p_max = min(prices), max(prices)
+        p_rng = (p_max - p_min) or 1
+        bars = ""
+        for c in cl1m:
+            pct = int((c["close"] - p_min) / p_rng * 80) + 10
+            bull = c["close"] >= c["open"]
+            clr = "#4d9fff" if bull else "#ffd700"
+            bars += f'<div style="display:inline-block;width:8px;height:{pct}px;background:{clr};margin:1px;border-radius:2px;vertical-align:bottom;"></div>'
+        st.markdown(f"""<div class="metric-card">
+        <div class="metric-label">1m Candles</div>
+        <div style="height:90px;display:flex;align-items:flex-end;justify-content:center;padding:4px 0;">{bars}</div>
+        <div class="metric-sub">${prices[-1]:,.2f}</div>
+        </div>""", unsafe_allow_html=True)
+    else:
+        st.markdown(f"""<div class="metric-card">
+        <div class="metric-label">1m Candles</div>
+        <div style="height:90px;display:flex;align-items:center;justify-content:center;color:#333;font-size:11px;">Awaiting data...</div>
+        </div>""", unsafe_allow_html=True)
 
 # ── Multi-Timeframe Checklist ─────────────────────────────────────────────────
-st.markdown("### 📋 Tiered Timeframe Checklist")
+st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
 bc, sc = st.columns(2)
 
 def _card(cls, title, detail):
-    return f'<div class="{cls}"><b>{title}</b><br><span style="font-size:12px;font-weight:normal;">{detail}</span></div>'
+    return f'<div class="{cls}"><b>{title}</b><br><span style="font-size:11px;font-weight:normal;color:#8b949e;">{detail}</span></div>'
 
 def _tf_status(tf_name, state):
-    if not state: return "", ""
+    if not state: 
+        return _card("step-fail", f"{tf_name} BUY ⏳", "Waiting for data..."), \
+               _card("step-fail", f"{tf_name} SELL ⏳", "Waiting for data...")
     vol, sma, rvol = state.get("volume",0), state.get("sma_vol",0), state.get("rvol",0)
     s1, s2b, s2s = state.get("s1",False), state.get("s2b",False), state.get("s2s",False)
-    
     cb = "step-pass" if (s1 and s2b) else "step-fail"
     cs = "step-pass" if (s1 and s2s) else "step-fail"
     detail = f"Vol: {vol:,.0f} | SMA: {sma:,.0f} | RVOL: {rvol:.1f}x"
-    
     return _card(cb, f"{tf_name} BUY {'✅' if (s1 and s2b) else '❌'}", detail), \
            _card(cs, f"{tf_name} SELL {'✅' if (s1 and s2s) else '❌'}", detail)
 
-tf = st.session_state.tf_state
-b1, s1   = _tf_status("1m", tf["1m"])
-b5, s5   = _tf_status("5m", tf["5m"])
-b15, s15 = _tf_status("15m", tf["15m"])
-b30, s30 = _tf_status("30m", tf["30m"])
+b1, s1_c   = _tf_status("1m",  tf.get("1m",{}))
+b5, s5_c   = _tf_status("5m",  tf.get("5m",{}))
+b15, s15_c = _tf_status("15m", tf.get("15m",{}))
+b30, s30_c = _tf_status("30m", tf.get("30m",{}))
+
+# TICK step card
+tick_buy_cls  = "step-pass" if tick > tick_threshold  else "step-fail"
+tick_sell_cls = "step-pass" if tick < -tick_threshold else "step-fail"
+tick_buy_card  = _card(tick_buy_cls,  f"$TICK BULL {'✅' if tick > tick_threshold else '❌'}",  f"Current: {tick:+.0f} | Threshold: +{tick_threshold}")
+tick_sell_card = _card(tick_sell_cls, f"$TICK BEAR {'✅' if tick < -tick_threshold else '❌'}", f"Current: {tick:+.0f} | Threshold: -{tick_threshold}")
 
 with bc:
-    st.markdown("#### 🔵 BUY Checks")
-    st.markdown(b1+b5+b15+b30, unsafe_allow_html=True)
+    st.markdown("<h4 style='color:#4d9fff;font-size:14px;letter-spacing:3px;'>🔵 BUY PRESSURE CHECKS</h4>", unsafe_allow_html=True)
+    st.markdown(b1+b5+b15+b30+tick_buy_card, unsafe_allow_html=True)
 with sc:
-    st.markdown("#### 🟡 SELL Checks")
-    st.markdown(s1+s5+s15+s30, unsafe_allow_html=True)
+    st.markdown("<h4 style='color:#ffd700;font-size:14px;letter-spacing:3px;'>🟡 SELL PRESSURE CHECKS</h4>", unsafe_allow_html=True)
+    st.markdown(s1_c+s5_c+s15_c+s30_c+tick_sell_card, unsafe_allow_html=True)
+
+# ── Footer ────────────────────────────────────────────────────────────────────
+st.markdown(f"""
+<div style="text-align:center;color:#1a2233;font-size:10px;padding:16px 0 4px;
+  font-family:'Share Tech Mono',monospace;border-top:1px solid #0d1117;margin-top:16px;">
+3-STEP PRESSURE METHOD SCANNER &nbsp;·&nbsp; TASTYTRADE OPEN API + DXFEED DXLINK WEBSOCKET
+&nbsp;·&nbsp; NOT FINANCIAL ADVICE
+</div>""", unsafe_allow_html=True)
 
 if st.session_state.running:
     time.sleep(2)
