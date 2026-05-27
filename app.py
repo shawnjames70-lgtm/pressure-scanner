@@ -388,7 +388,7 @@ async def _stream(dxlink_url, auth_token, symbol, tick_symbol, add_symbol, sma_p
     from ssl import create_default_context
     
     ssl_ctx = create_default_context()
-    CH_1M, CH_5M, CH_15M, CH_30M, TICK_CH, ADD_CH = 1, 2, 3, 4, 5, 6
+    CH_1M, CH_5M, CH_15M, CH_30M, TICK_CH, ADD_CH = 1, 3, 5, 7, 9, 11
     ch_map = {CH_1M: "1m", CH_5M: "5m", CH_15M: "15m", CH_30M: "30m"}
 
     async with AsyncClient(verify=ssl_ctx) as client:
