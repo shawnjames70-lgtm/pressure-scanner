@@ -121,6 +121,7 @@ _init()
 # Auth helpers
 # ─────────────────────────────────────────────────────────────────────────────
 def _do_login(username, password, is_test, otp=None, challenge_token=None):
+    """Login to Tastytrade. Returns (response, new_challenge_token_or_None)."""
     base = TT_CERT if is_test else TT_API
     hdrs = {"Content-Type": "application/json"}
     if challenge_token:
@@ -130,6 +131,17 @@ def _do_login(username, password, is_test, otp=None, challenge_token=None):
     r = _req.post(f"{base}/sessions",
                   headers=hdrs,
                   json={"login": username, "password": password, "remember-me": True},
+                  timeout=15)
+    return r
+
+def _trigger_device_challenge(challenge_token, is_test):
+    """Call /device-challenge to send the OTP SMS to the user's phone."""
+    base = TT_CERT if is_test else TT_API
+    r = _req.post(f"{base}/device-challenge",
+                  headers={
+                      "Content-Type": "application/json",
+                      "X-Tastyworks-Challenge-Token": challenge_token
+                  },
                   timeout=15)
     return r
 
@@ -370,7 +382,9 @@ if not st.session_state.authenticated:
                                               use_container_width=True)
 
         if st.session_state.otp_needed:
-            st.warning("📱 2FA required — a code was sent to your phone.")
+            phone_hint = st.session_state.get("_otp_phone", "")
+            phone_str = f" ending in **{phone_hint}**" if phone_hint else ""
+            st.warning(f"📱 2FA required — a one-time code was sent to your phone{phone_str}. Check your SMS and enter it below.")
             with st.form("otp_form"):
                 otp_code = st.text_input("Enter OTP Code", max_chars=8)
                 otp_sub  = st.form_submit_button("Verify & Connect", type="primary",
@@ -386,16 +400,20 @@ if not st.session_state.authenticated:
                 if r.status_code in (200, 201):
                     d = r.json().get("data", r.json())
                     session_token = d.get("session-token","")
-                    dxlink_url, auth_token = _get_quote_token(
-                        session_token, st.session_state._login_test)
-                    st.session_state.session_token  = session_token
-                    st.session_state.dxlink_url     = dxlink_url
-                    st.session_state.auth_token     = auth_token
-                    st.session_state.authenticated  = True
-                    st.session_state.otp_needed     = False
-                    st.rerun()
+                    try:
+                        dxlink_url, auth_token = _get_quote_token(
+                            session_token, st.session_state._login_test)
+                        st.session_state.session_token  = session_token
+                        st.session_state.dxlink_url     = dxlink_url
+                        st.session_state.auth_token     = auth_token
+                        st.session_state.authenticated  = True
+                        st.session_state.otp_needed     = False
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Stream token error: {e}")
                 else:
-                    st.error(f"OTP failed: {r.json().get('error',{}).get('message','Unknown error')}")
+                    err_msg = r.json().get('error',{}).get('message', r.text)
+                    st.error(f"OTP failed ({r.status_code}): {err_msg}")
         else:
             otp_sub = False
 
@@ -414,18 +432,33 @@ if not st.session_state.authenticated:
                         st.rerun()
                     except Exception as e:
                         st.error(f"Stream token error: {e}")
-                elif r.status_code == 403:
-                    err = r.json().get("error", {}).get("code","")
-                    if err == "device_challenge_required":
+                elif r.status_code in (401, 403):
+                    try:
+                        err = r.json().get("error", {}).get("code","")
+                    except:
+                        err = ""
+                    challenge_tok = r.headers.get("X-Tastyworks-Challenge-Token","")
+                    if err == "device_challenge_required" or challenge_tok:
+                        # Step 2: trigger the OTP SMS to the user's phone
+                        dc_resp = _trigger_device_challenge(challenge_tok, is_test)
+                        phone = ""
+                        try:
+                            phone = dc_resp.json().get("data",{}).get("phone","")
+                        except:
+                            pass
                         st.session_state.otp_needed      = True
-                        st.session_state.challenge_token = r.headers.get(
-                            "X-Tastyworks-Challenge-Token","")
-                        st.session_state._login_user = username
-                        st.session_state._login_pass = password
-                        st.session_state._login_test = is_test
+                        st.session_state.challenge_token = challenge_tok
+                        st.session_state._login_user     = username
+                        st.session_state._login_pass     = password
+                        st.session_state._login_test     = is_test
+                        st.session_state._otp_phone      = phone
                         st.rerun()
                     else:
-                        st.error(f"Login error: {r.json().get('error',{}).get('message','Unknown error')}")
+                        try:
+                            err_msg = r.json().get('error',{}).get('message', r.text)
+                        except:
+                            err_msg = r.text
+                        st.error(f"Login error ({r.status_code}): {err_msg}")
                 else:
                     st.error(f"Login failed ({r.status_code}): check your credentials.")
 
