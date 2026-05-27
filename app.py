@@ -93,16 +93,16 @@ st.markdown("""
 
 html,body,[data-testid="stAppViewContainer"]{
   font-family:'Share Tech Mono',monospace;
-  background:radial-gradient(ellipse at top,#0a0e1a 0%,#050810 100%);
-  color:#c9d1d9;}
-[data-testid="stSidebar"]{background:#070b14;color:#c9d1d9;border-right:1px solid #1a2233;}
-[data-testid="stSidebar"] label{color:#8b949e !important;}
-[data-testid="stSidebar"] h2{color:#4d9fff !important;}
-h1,h2,h3,h4{color:#e6edf3;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
+  background:#f0f5fa;
+  color:#1e293b;}
+[data-testid="stSidebar"]{background:#ffffff;color:#1e293b;border-right:1px solid #e2e8f0;}
+[data-testid="stSidebar"] label{color:#475569 !important;}
+[data-testid="stSidebar"] h2{color:#0ea5e9 !important;}
+h1,h2,h3,h4{color:#0f172a;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
 
 /* Ticker Tape */
 .ticker-tape{
-  background:#070b14;border-top:1px solid #1a2233;border-bottom:1px solid #1a2233;
+  background:#ffffff;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;box-shadow:0 2px 10px rgba(0,0,0,0.02);
   overflow:hidden;white-space:nowrap;padding:8px 0;margin-bottom:16px;}
 .ticker-inner{
   display:inline-block;animation:scroll-left 20s linear infinite;
@@ -112,10 +112,10 @@ h1,h2,h3,h4{color:#e6edf3;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
   100%{transform:translateX(-100%)}}
 
 /* TICK Gauge */
-.gauge-wrap{background:#0d1117;border:1px solid #1a2233;border-radius:16px;padding:16px;text-align:center;}
-.gauge-label{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;}
+.gauge-wrap{background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:16px;text-align:center;}
+.gauge-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;}
 .gauge-value{font-size:44px;font-weight:900;font-family:'Orbitron',sans-serif;margin:4px 0;}
-.gauge-bar-bg{background:#1a2233;border-radius:8px;height:14px;width:100%;margin:8px 0;position:relative;overflow:visible;}
+.gauge-bar-bg{background:#e2e8f0;border-radius:8px;height:14px;width:100%;margin:8px 0;position:relative;overflow:visible;}
 .gauge-bar-fill{height:14px;border-radius:8px;transition:width 0.4s ease,background 0.4s ease;}
 .gauge-needle{position:absolute;top:-4px;width:4px;height:22px;border-radius:2px;
   background:#fff;transform:translateX(-50%);transition:left 0.4s ease;box-shadow:0 0 8px #fff;}
@@ -123,19 +123,19 @@ h1,h2,h3,h4{color:#e6edf3;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
 
 /* Metric Cards */
 .metric-card{
-  background:linear-gradient(135deg,#0d1117 0%,#111827 100%);
-  border:1px solid #1e2d45;border-radius:14px;
+  background:#ffffff;
+  border:1px solid #e2e8f0;border-radius:14px;
   padding:20px 16px;text-align:center;margin:4px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.4);}
-.metric-label{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;}
+  box-shadow:0 4px 15px rgba(0,0,0,0.04);}
+.metric-label{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;}
 .metric-value{font-size:30px;font-weight:900;font-family:'Orbitron',sans-serif;margin:6px 0 4px;}
 .metric-sub{font-size:11px;color:#555;}
 
 /* Candle Bars */
 .candle-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;}
 .candle-body{height:18px;border-radius:3px;min-width:4px;display:inline-block;}
-.candle-label{color:#8b949e;width:30px;text-align:right;font-size:11px;}
-.candle-price{color:#e6edf3;font-size:13px;font-weight:bold;width:70px;}
+.candle-label{color:#64748b;width:30px;text-align:right;font-size:11px;}
+.candle-price{color:#0f172a;font-size:13px;font-weight:bold;width:70px;}
 .candle-vol{color:#555;font-size:10px;}
 
 /* Signal Banners */
@@ -171,7 +171,7 @@ h1,h2,h3,h4{color:#e6edf3;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
   font-family:'Orbitron',sans-serif;}
 .signal-wait{
   background:#0a0e1a;color:#333;padding:36px 20px;
-  border-radius:20px;text-align:center;border:1px solid #1a2233;margin:10px 0;
+  border-radius:20px;text-align:center;border:1px solid #e2e8f0;margin:10px 0;
   font-family:'Orbitron',sans-serif;}
 
 @keyframes pg{from{box-shadow:0 0 40px #0066ff66,0 0 80px #0066ff22}to{box-shadow:0 0 80px #0066ffcc,0 0 160px #0066ff66}}
@@ -193,7 +193,7 @@ h1,h2,h3,h4{color:#e6edf3;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
   box-shadow:inset 0 0 20px #ffd70011;}
 
 .login-box{
-  background:#0d1117;border:1px solid #1e2d45;border-radius:16px;
+  background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;
   padding:40px;max-width:480px;margin:60px auto;
   box-shadow:0 0 60px #0066ff22;}
 
@@ -459,7 +459,7 @@ if not st.session_state.authenticated:
     st.markdown("---")
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
-        st.markdown("""<div class="login-box"><h2 style="text-align:center;color:#e6edf3;margin-bottom:24px;">🔐 Tastytrade Login</h2></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="login-box"><h2 style="text-align:center;color:#0f172a;margin-bottom:24px;">🔐 Tastytrade Login</h2></div>""", unsafe_allow_html=True)
         with st.form("login_form"):
             username  = st.text_input("Username / Email", placeholder="your@email.com")
             password  = st.text_input("Password", type="password")
@@ -632,7 +632,7 @@ with gcol:
       <div class="gauge-value" style="color:{tick_color};text-shadow:{needle_glow};">{tick:+.0f}</div>
       <div style="font-size:11px;color:{tick_color};letter-spacing:2px;margin-bottom:6px;">{tick_label}</div>
       <div class="gauge-bar-bg">
-        <div style="position:absolute;left:{bear_pct:.1f}%;top:0;bottom:0;right:{100-bull_pct:.1f}%;background:#1a2233;border-radius:8px;"></div>
+        <div style="position:absolute;left:{bear_pct:.1f}%;top:0;bottom:0;right:{100-bull_pct:.1f}%;background:#e2e8f0;border-radius:8px;"></div>
         <div style="position:absolute;left:{bear_pct:.1f}%;top:0;height:14px;width:{bull_pct-bear_pct:.1f}%;background:#1a2a1a;border-radius:0;"></div>
         <div class="gauge-bar-fill" style="width:{tick_pct:.1f}%;background:linear-gradient(90deg,#ffd700,{bar_color});"></div>
         <div class="gauge-needle" style="left:{tick_pct:.1f}%;box-shadow:{needle_glow};"></div>
@@ -690,7 +690,7 @@ st.markdown("<div style='margin-top:12px;'></div>", unsafe_allow_html=True)
 bc, sc = st.columns(2)
 
 def _card(cls, title, detail):
-    return f'<div class="{cls}"><b>{title}</b><br><span style="font-size:11px;font-weight:normal;color:#8b949e;">{detail}</span></div>'
+    return f'<div class="{cls}"><b>{title}</b><br><span style="font-size:11px;font-weight:normal;color:#64748b;">{detail}</span></div>'
 
 def _tf_status(tf_name, state):
     if not state: 
