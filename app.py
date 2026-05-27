@@ -382,7 +382,7 @@ def _parse_feed(channel, data, ch_map, tick_ch, add_ch, sma_period, tick_thr):
 # ─────────────────────────────────────────────────────────────────────────────
 # Async WebSocket stream
 # ─────────────────────────────────────────────────────────────────────────────
-async def _stream(dxlink_url, auth_token, symbol, tick_symbol, add_symbol, sma_period, tick_thr):
+async def _stream(dxlink_url, auth_token, symbol, tick_symbol, add_symbol, sma_period, tick_thr, remember_token="", username=""):
     from httpx import AsyncClient
     from httpx_ws import aconnect_ws
     from ssl import create_default_context
