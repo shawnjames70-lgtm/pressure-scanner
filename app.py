@@ -629,6 +629,9 @@ if not st.session_state.authenticated:
                         st.session_state.auth_token    = atk
                         st.session_state.authenticated = True
                         st.session_state.otp_needed    = False
+                        # Reset stream flags so auto-start fires fresh
+                        st.session_state._auto_started = False
+                        st.session_state.running       = False
                         st.rerun()
                     except Exception as e:
                         st.error(f"Stream token error: {e}")
@@ -649,6 +652,9 @@ if not st.session_state.authenticated:
                     st.session_state.dxlink_url    = url
                     st.session_state.auth_token    = atk
                     st.session_state.authenticated = True
+                    # Reset stream flags so auto-start fires fresh
+                    st.session_state._auto_started = False
+                    st.session_state.running       = False
                     st.rerun()
                 except Exception as e:
                     st.error(f"Stream token error: {e}")
@@ -702,7 +708,11 @@ with st.sidebar:
         st.rerun()
 
 # ── Auto-start on first load after login ─────────────────────────────────────
-if not st.session_state.running and not st.session_state._auto_started:
+# Guard: only auto-start when we actually have valid tokens (not during OTP flow)
+if (not st.session_state.running
+        and not st.session_state._auto_started
+        and st.session_state.dxlink_url
+        and st.session_state.auth_token):
     st.session_state._auto_started = True
     st.session_state.running = True
     start_stream(
