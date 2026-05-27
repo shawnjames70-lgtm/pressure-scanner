@@ -48,33 +48,33 @@ html,body,[data-testid="stAppViewContainer"]{
 [data-testid="stSidebar"] label{color:#c9d1d9 !important;}
 h1,h2,h3,h4{color:#e6edf3;}
 .signal-long{
-  background:linear-gradient(135deg,#00ff00 0%,#00cc00 100%);
-  color:#000;padding:50px 20px;border-radius:20px;text-align:center;
-  box-shadow:0 0 80px #00ff0099;animation:pg 1s infinite alternate;margin:10px 0;}
-.signal-short{
-  background:linear-gradient(135deg,#ff0000 0%,#cc0000 100%);
+  background:linear-gradient(135deg,#0066ff 0%,#0044cc 100%);
   color:#fff;padding:50px 20px;border-radius:20px;text-align:center;
-  box-shadow:0 0 80px #ff000099;animation:pr 1s infinite alternate;margin:10px 0;}
+  box-shadow:0 0 80px #0066ff99;animation:pg 1s infinite alternate;margin:10px 0;}
+.signal-short{
+  background:linear-gradient(135deg,#ffd700 0%,#ffaa00 100%);
+  color:#000;padding:50px 20px;border-radius:20px;text-align:center;
+  box-shadow:0 0 80px #ffd70099;animation:pr 1s infinite alternate;margin:10px 0;}
 .signal-wait{
   background:#1c1c2e;color:#888;padding:50px 20px;
   border-radius:20px;text-align:center;border:2px solid #333;margin:10px 0;}
-@keyframes pg{from{box-shadow:0 0 40px #00ff0066}to{box-shadow:0 0 100px #00ff00cc}}
-@keyframes pr{from{box-shadow:0 0 40px #ff000066}to{box-shadow:0 0 100px #ff0000cc}}
+@keyframes pg{from{box-shadow:0 0 40px #0066ff66}to{box-shadow:0 0 100px #0066ffcc}}
+@keyframes pr{from{box-shadow:0 0 40px #ffd70066}to{box-shadow:0 0 100px #ffd700cc}}
 .step-pass{
-  background:#0d2b0d;border-left:6px solid #00ff00;
+  background:#0a1a3a;border-left:6px solid #4d9fff;
   padding:14px 18px;border-radius:8px;margin:6px 0;
-  color:#00ff00;font-weight:bold;font-family:'Courier New',monospace;}
+  color:#4d9fff;font-weight:bold;font-family:'Courier New',monospace;}
 .step-fail{
-  background:#2b0d0d;border-left:6px solid #ff4444;
+  background:#2a2000;border-left:6px solid #ffd700;
   padding:14px 18px;border-radius:8px;margin:6px 0;
-  color:#ff4444;font-weight:bold;font-family:'Courier New',monospace;}
+  color:#ffd700;font-weight:bold;font-family:'Courier New',monospace;}
 .metric-card{
   background:#161b22;border:1px solid #30363d;border-radius:14px;
   padding:22px;text-align:center;margin:4px;}
 .metric-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:2px;}
 .metric-value{font-size:38px;font-weight:bold;color:#e6edf3;margin:10px 0 4px;}
-.dpos{color:#3fb950;font-size:13px;}
-.dneg{color:#f85149;font-size:13px;}
+.dpos{color:#4d9fff;font-size:13px;}
+.dneg{color:#ffd700;font-size:13px;}
 .login-box{
   background:#161b22;border:1px solid #30363d;border-radius:16px;
   padding:40px;max-width:480px;margin:60px auto;}
@@ -550,15 +550,15 @@ st.divider()
 sig = st.session_state.signal
 if sig == "LONG":
     st.markdown(f"""<div class="signal-long">
-    <div style="font-size:72px;font-weight:900;">🟢 ALL-GREEN GO LONG 🟢</div>
-    <div style="font-size:20px;margin-top:12px;opacity:0.85;">
+    <div style="font-size:72px;font-weight:900;">🔵 ALL-BLUE GO LONG 🔵</div>
+    <div style="font-size:20px;margin-top:12px;opacity:0.90;">
       Volume Surge ✅ &nbsp;·&nbsp; Shaved Top ✅ &nbsp;·&nbsp;
       TICK &gt; +{tick_threshold} ✅
     </div></div>""", unsafe_allow_html=True)
 elif sig == "SHORT":
     st.markdown(f"""<div class="signal-short">
-    <div style="font-size:72px;font-weight:900;">🔴 ALL-RED GO SHORT 🔴</div>
-    <div style="font-size:20px;margin-top:12px;opacity:0.85;">
+    <div style="font-size:72px;font-weight:900;">🟡 ALL-YELLOW GO SHORT 🟡</div>
+    <div style="font-size:20px;margin-top:12px;opacity:0.90;">
       Volume Surge ✅ &nbsp;·&nbsp; Shaved Bottom ✅ &nbsp;·&nbsp;
       TICK &lt; -{tick_threshold} ✅
     </div></div>""", unsafe_allow_html=True)
@@ -579,8 +579,8 @@ tick   = st.session_state.tick_val
 vd     = volume - sma_v
 vdc    = "dpos" if vd >= 0 else "dneg"
 vds    = f"{'▲' if vd>=0 else '▼'} {abs(vd):,.0f} vs SMA"
-tc     = ("#3fb950" if tick > tick_threshold
-          else "#f85149" if tick < -tick_threshold
+tc     = ("#4d9fff" if tick > tick_threshold
+          else "#ffd700" if tick < -tick_threshold
           else "#e6edf3")
 
 c1, c2, c3, c4 = st.columns(4)
@@ -605,7 +605,7 @@ with c4:
     <div class="metric-label">NYSE $TICK</div>
     <div class="metric-value" style="color:{tc};">{tick:+.0f}</div>
     <div style="font-size:12px;color:#555;">
-      {"🟢 BULLISH" if tick > tick_threshold else "🔴 BEARISH" if tick < -tick_threshold else "⚪ NEUTRAL"}
+      {"🔵 BULLISH" if tick > tick_threshold else "🟡 BEARISH" if tick < -tick_threshold else "⚪ NEUTRAL"}
     </div>
     </div>""", unsafe_allow_html=True)
 
@@ -631,7 +631,7 @@ c3b = "step-pass" if st.session_state.step3_buy  else "step-fail"
 c3s = "step-pass" if st.session_state.step3_sell else "step-fail"
 
 with bc:
-    st.markdown("#### 🟢 BUY Conditions")
+    st.markdown("#### 🔵 BUY Conditions (Blue Signal)")
     st.markdown(_card(c1_, i1, "Step 1 — Volume Surge",
         f"Current vol: {volume:,.0f} &nbsp;|&nbsp; SMA({vol_sma_period}): {sma_v:,.0f}"),
         unsafe_allow_html=True)
@@ -641,7 +641,7 @@ with bc:
         f"Current $TICK: {tick:+.0f}"), unsafe_allow_html=True)
 
 with sc:
-    st.markdown("#### 🔴 SELL Conditions")
+    st.markdown("#### 🟡 SELL Conditions (Yellow Signal)")
     st.markdown(_card(c1_, i1, "Step 1 — Volume Surge",
         f"Current vol: {volume:,.0f} &nbsp;|&nbsp; SMA({vol_sma_period}): {sma_v:,.0f}"),
         unsafe_allow_html=True)
