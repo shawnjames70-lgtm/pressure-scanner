@@ -1,3 +1,14 @@
+---
+title: 3-Step Pressure Method Scanner
+emoji: 📈
+colorFrom: green
+colorTo: red
+sdk: docker
+pinned: true
+license: mit
+app_port: 7860
+---
+
 # 3-Step Pressure Method Scanner
 
 A live daytrading/scalping scanner powered by the Tastytrade Open API and dxFeed WebSocket.
