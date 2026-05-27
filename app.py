@@ -383,14 +383,23 @@ async def _run_stream(dxlink_url, auth_token, spy_sym, vix_sym, sma_period):
         _blog("AUTH sent")
 
         # Wait for AUTHORIZED
+        # NOTE: dxFeed sends UNAUTHORIZED first (initial state), then AUTHORIZED
+        # after processing the AUTH message. Must NOT break on UNAUTHORIZED.
         authorized = False
-        for _ in range(15):
-            raw = await asyncio.wait_for(recv_text(), timeout=5.0)
+        for _ in range(20):
+            raw = await asyncio.wait_for(recv_text(), timeout=8.0)
             msg = json.loads(raw)
-            _blog(f"← {msg.get('type','?')} state={msg.get('state','')}")
-            if msg.get("type") == "AUTH_STATE" and msg.get("state") == "AUTHORIZED":
-                authorized = True
-                break
+            mtype = msg.get("type", "")
+            state = msg.get("state", "")
+            _blog(f"← {mtype} state={state}")
+            if mtype == "AUTH_STATE":
+                if state == "AUTHORIZED":
+                    authorized = True
+                    break
+                elif state == "UNAUTHORIZED":
+                    # This is the initial state — keep waiting for AUTHORIZED
+                    continue
+            # Other messages (SETUP response etc.) — keep looping
 
         if not authorized:
             _blog("ERROR: AUTH failed — check token")
